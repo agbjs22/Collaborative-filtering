@@ -32,7 +32,6 @@
 17. [Results Summary](#17-results-summary)
 18. [Limitations and Future Work](#18-limitations-and-future-work)
 19. [References](#19-references)
-20. [License](#20-license)
 
 ---
 
@@ -472,7 +471,3 @@ The project is done when:
 5. Hug, N. (2020). *Surprise: A Python library for recommender systems.* JOSS.
 
 ---
-
-## 20. License
-
-Released under the [MIT License](LICENSE). The MovieLens dataset is provided by [GroupLens](https://grouplens.org/datasets/movielens/) and is licensed for research use; do not redistribute it with this repository.
