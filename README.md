@@ -5,7 +5,6 @@
 ![Python](https://img.shields.io/badge/Python-3.10%20|%203.11-blue)
 ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688)
 ![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61dafb)
-![License](https://img.shields.io/badge/License-MIT-green)
 
 **Course:** Data Mining Techniques (DMT)
 **Author:** Guha Bava Jaya Sre ([@agbjs22](https://github.com/agbjs22)) · B.Tech Information Technology, K. Ramakrishnan College of Engineering
