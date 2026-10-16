@@ -1,0 +1,12 @@
+numpy
+pandas
+scipy
+scikit-learn
+scikit-surprise
+matplotlib
+tqdm
+pytest
+certifi
+fastapi
+uvicorn[standard]
+pydantic

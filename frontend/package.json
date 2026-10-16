@@ -1,0 +1,8 @@
+{
+  "name": "moviemingle-ui",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "dev": "vite", "build": "tsc -b && vite build", "preview": "vite preview" },
+  "dependencies": { "vite": "latest", "typescript": "latest", "react": "latest", "react-dom": "latest" },
+  "devDependencies": { "@types/react": "latest", "@types/react-dom": "latest" }
+}
