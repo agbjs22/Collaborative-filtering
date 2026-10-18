@@ -2,7 +2,20 @@ import { FormEvent, useEffect, useState } from 'react'
 
 type Movie = { item_id: number; title: string; score?: number; explanation?: string }
 type Metric = Record<string, string | number>
-const api = (path: string) => fetch(`/api${path}`).then(async r => { const data = await r.json(); if (!r.ok) throw new Error(data.detail || 'Something went wrong'); return data })
+async function readResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? ''
+  const body = contentType.includes('application/json') ? await response.json() : await response.text()
+  if (!response.ok) {
+    const detail = typeof body === 'object' && body !== null && 'detail' in body ? String(body.detail) : ''
+    throw new Error(detail || `Request failed (${response.status}). Is the API server running on port 8000?`)
+  }
+  if (!contentType.includes('application/json')) {
+    throw new Error('The API returned an unexpected response. Start the FastAPI server on port 8000 and reload this page.')
+  }
+  return body
+}
+
+const api = (path: string) => fetch(`/api${path}`).then(readResponse)
 
 function Stars({ score }: { score?: number }) { return <span className="score">★ {score?.toFixed(1)}</span> }
 function MovieList({ items, empty = 'Choose a profile to see films.' }: { items: Movie[]; empty?: string }) {
@@ -19,7 +32,7 @@ export default function App() {
   useEffect(() => { discover() }, [])
   useEffect(() => { if (tab === 'compare' && !metrics.length) api('/metrics').then(x => setMetrics(x.items)).catch(e => setNotice(e.message)) }, [tab])
   const findMovies = async (event: FormEvent) => { event.preventDefault(); const result = await api(`/movies?query=${encodeURIComponent(query)}`); setSearches(result.items) }
-  const newUser = async () => { if (!Object.keys(selected).length) return setNotice('Rate at least one film first.'); try { const data = await fetch('/api/recommend/new-user', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ratings:Object.entries(selected).map(([item_id, rating]) => ({item_id:Number(item_id), rating})), model:'item_cf'})}).then(r => r.json()); if(data.detail) throw new Error(data.detail); setRecommendations(data.items); setTab('discover'); setNotice('Your fresh recommendations are ready below.') } catch(e) { setNotice((e as Error).message) } }
+  const newUser = async () => { if (!Object.keys(selected).length) return setNotice('Rate at least one film first.'); try { const data = await fetch('/api/recommend/new-user', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ratings:Object.entries(selected).map(([item_id, rating]) => ({item_id:Number(item_id), rating})), model:'item_cf'})}).then(readResponse); setRecommendations(data.items); setTab('discover'); setNotice('Your fresh recommendations are ready below.') } catch(e) { setNotice((e as Error).message) } }
   return <main>
     <header><a className="brand" onClick={() => setTab('discover')}>movie<span>mingle</span></a><nav>{([['discover','Discover'],['new','Build my taste'],['compare','Model lab']] as const).map(([id,label]) => <button className={tab===id?'active':''} onClick={() => setTab(id)} key={id}>{label}</button>)}</nav><div className="chip">MovieLens 100K</div></header>
     {notice && <div className="notice">{notice}<button onClick={() => setNotice('')}>×</button></div>}
