@@ -9,10 +9,6 @@
       "root": "./",
       "framework": "fastapi",
       "entrypoint": "api.main:app",
-      "includeFiles": [
-        "data/ml-100k/**",
-        "results/metrics.csv"
-      ]
     }
   },
   "rewrites": [
