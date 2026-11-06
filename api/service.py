@@ -43,7 +43,7 @@ class RecommendationService:
         return self.models[model]
 
     def movie(self, item_index: int, score: float | None = None, explanation: str | None = None) -> dict[str, Any]:
-        item_id = self.inverse_items[item_index]
+        item_id = int(self.inverse_items[item_index])
         result: dict[str, Any] = {"item_id": item_id, "title": self.movie_by_id.get(item_id, "Unknown movie")}
         if score is not None:
             result["score"] = round(float(score), 2)
