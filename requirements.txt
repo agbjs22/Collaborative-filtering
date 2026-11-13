@@ -1,12 +1,24 @@
-numpy
-pandas
-scipy
-scikit-learn
-scikit-surprise
-matplotlib
-tqdm
-pytest
-certifi
-fastapi
-uvicorn[standard]
-pydantic
+# Core scientific computing and data manipulation
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+scikit-learn>=1.2.0
+
+# Recommendation algorithms
+# Note: scikit-surprise requires Python 3.10/3.11 with C build tools.
+# On Python 3.12+ or environments without wheels, src/svd_model.py provides
+# an exact mathematical NumPy SGD fallback.
+scikit-surprise>=1.1.3; python_version < "3.12"
+
+# Visualization and plotting
+matplotlib>=3.7.0
+
+# Testing and utilities
+tqdm>=4.65.0
+pytest>=7.3.0
+certifi>=2023.5.7
+
+# Optional API service layer (outside core academic scope)
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+pydantic>=2.0.0

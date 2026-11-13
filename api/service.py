@@ -95,4 +95,7 @@ class RecommendationService:
 
     def metrics(self) -> list[dict[str, Any]]:
         path = Path(__file__).resolve().parents[1] / "results" / "metrics.csv"
-        return pd.read_csv(path).round(4).to_dict(orient="records") if path.exists() else []
+        if not path.exists():
+            return []
+        df = pd.read_csv(path).round(4)
+        return df.replace({np.nan: None}).to_dict(orient="records")

@@ -72,6 +72,8 @@ def reindex_ratings(ratings: pd.DataFrame) -> tuple[pd.DataFrame, dict[int, int]
     indexed = ratings.copy()
     indexed["user_idx"] = indexed.user_id.map(users)
     indexed["item_idx"] = indexed.item_id.map(items)
+    indexed["u"] = indexed["user_idx"]
+    indexed["i"] = indexed["item_idx"]
     return indexed, users, items
 
 

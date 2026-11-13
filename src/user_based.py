@@ -44,7 +44,7 @@ class UserBasedCF:
         w = np.take_along_axis(sims, top, axis=0)
         ok = np.isfinite(w)
         w = np.where(ok, w, 0.0)
-        dev = (R[top, items[None, :]] - mean[top, None]) * ok
+        dev = (R[top, items[None, :]] - mean[top]) * ok
         num, den = (w * dev).sum(axis=0), np.abs(w).sum(axis=0)
         return np.clip(mean[u] + np.divide(num, den, out=np.zeros_like(num), where=den > 0), 1, 5)
 
