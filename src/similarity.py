@@ -3,32 +3,43 @@ from __future__ import annotations
 import numpy as np
 
 
-def _cosine_rows(matrix: np.ndarray) -> np.ndarray:
-    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
-    safe = np.divide(matrix, norms, out=np.zeros_like(matrix, dtype=float), where=norms > 0)
-    sim = safe @ safe.T
-    np.fill_diagonal(sim, 0.0)
-    return np.clip(sim, -1, 1)
+def cosine_sim(M: np.ndarray) -> np.ndarray:
+    """Cosine similarity over zero-filled rating vectors (row-wise)."""
+    norm = np.linalg.norm(M, axis=1, keepdims=True)
+    norm[norm == 0] = 1
+    S = (M / norm) @ (M / norm).T
+    np.fill_diagonal(S, 0)
+    return np.clip(S, -1, 1)
 
 
-def cosine_similarity(matrix: np.ndarray) -> np.ndarray:
-    """Cosine similarity over zero-filled rating vectors."""
-    return _cosine_rows(matrix.astype(float, copy=False))
+# Keep the old name as an alias for backwards compatibility
+cosine_similarity = cosine_sim
 
 
-def pearson_similarity(matrix: np.ndarray) -> np.ndarray:
-    """Mean-centred row similarity, with unrated entries excluded from products."""
-    observed = matrix > 0
-    counts = observed.sum(axis=1, keepdims=True)
-    means = np.divide(matrix.sum(axis=1, keepdims=True), counts, out=np.zeros((matrix.shape[0], 1)), where=counts > 0)
-    centred = np.where(observed, matrix - means, 0.0)
-    return _cosine_rows(centred)
+def pearson_sim(R: np.ndarray, mask: np.ndarray, mean: np.ndarray) -> np.ndarray:
+    """Proper co-rated Pearson correlation with mask-aware denominator.
+
+    Each pair's correlation is computed only over co-rated items, not
+    the full rating vector.
+    """
+    C = (R - mean[:, None]) * mask              # mean-centred, 0 where unrated
+    M = mask.astype(float)
+    num = C @ C.T                               # sum over co-rated items
+    den = np.sqrt((C ** 2 @ M.T) * (M @ (C ** 2).T))
+    S = np.divide(num, den, out=np.zeros_like(num), where=den > 0)
+    np.fill_diagonal(S, 0)
+    return S
 
 
-def adjusted_cosine_similarity(matrix: np.ndarray) -> np.ndarray:
+# Keep the old name as an alias
+pearson_similarity = pearson_sim
+
+
+def adjusted_cosine_sim(R: np.ndarray, mask: np.ndarray, user_mean: np.ndarray) -> np.ndarray:
     """Item-item cosine after subtracting each user's observed-rating mean."""
-    observed = matrix > 0
-    counts = observed.sum(axis=1, keepdims=True)
-    means = np.divide(matrix.sum(axis=1, keepdims=True), counts, out=np.zeros((matrix.shape[0], 1)), where=counts > 0)
-    centred = np.where(observed, matrix - means, 0.0)
-    return _cosine_rows(centred.T)
+    C = (R - user_mean[:, None]) * mask
+    return cosine_sim(C.T)                       # item-item similarity
+
+
+# Keep the old name as an alias
+adjusted_cosine_similarity = adjusted_cosine_sim
