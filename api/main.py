@@ -1,18 +1,24 @@
-"""FastAPI entry point for the recommendation experience."""
+"""FastAPI entry point for the recommendation experience and analytics engine."""
 from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .service import RecommendationService
 
-app = FastAPI(title="MovieMingle API", version="1.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app = FastAPI(title="MovieMingle Recommender API", version="2.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class Rating(BaseModel):
@@ -42,7 +48,7 @@ def client_error(call):
 def root():
     """Point local developers to the UI and API documentation."""
     return {
-        "message": "MovieMingle API is running.",
+        "message": "MovieMingle Recommender API is active.",
         "frontend": "http://localhost:5173",
         "docs": "/docs",
     }
@@ -50,7 +56,17 @@ def root():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ready", "models": ["user_cf", "item_cf", "svd", "popularity"]}
+    return {
+        "status": "ready",
+        "models": [
+            "svd",
+            "item_cf_cosine",
+            "item_cf_adj",
+            "user_cf_pearson",
+            "user_cf_cosine",
+            "popularity",
+        ],
+    }
 
 
 @app.get("/api/users/{user_id}/history")
@@ -76,6 +92,56 @@ def movies(query: str = "", limit: int = Query(default=20, ge=1, le=50)):
 @app.get("/api/metrics")
 def metrics():
     return {"items": service().metrics()}
+
+
+@app.get("/api/analytics/summary")
+def analytics_summary():
+    """Return aggregated dataset metrics, rating distributions, and top movies."""
+    return service().analytics_summary()
+
+
+@app.get("/api/export/ratings")
+def export_ratings():
+    """Download the complete MovieLens 100K ratings dataset as CSV."""
+    content = service().export_ratings_csv()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="movielens_100k_ratings.csv"'},
+    )
+
+
+@app.get("/api/export/recommendations")
+def export_recommendations(user_id: int = Query(default=1), model: str = Query(default="svd"), n: int = Query(default=10)):
+    """Download current user recommendations as CSV."""
+    content = client_error(lambda: service().export_recommendations_csv(user_id, model, n))
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="recommendations_user_{user_id}_{model}.csv"'},
+    )
+
+
+@app.get("/api/export/metrics")
+def export_metrics():
+    """Download model evaluation metrics as CSV."""
+    content = service().export_metrics_csv()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="model_evaluation_metrics.csv"'},
+    )
+
+
+@app.get("/api/export/analytics")
+def export_analytics():
+    """Download aggregated dataset analytics summary as CSV."""
+    content = service().export_analytics_csv()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="dataset_analytics_summary.csv"'},
+    )
 
 
 frontend = Path(__file__).resolve().parents[1] / "frontend" / "dist"
